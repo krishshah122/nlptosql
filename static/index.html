@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SQL Work Assistant</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🤖 SQL Work Assistant</h1>
+      <p>Ask questions in English or Hinglish - I'll generate SQL queries for you!</p>
+    </header>
+
+    <div class="main-content">
+      <!-- Question Input Section -->
+      <div class="section">
+        <h2>Ask Your Question</h2>
+        <div class="input-group">
+          <textarea
+            id="questionInput"
+            style="min-height: 200px; width: 100%; font-size: 18px;"
+            placeholder="Type your question here..."
+          ></textarea>
+          <button id="generateBtn" onclick="generateQuery()">Generate SQL</button>
+        </div>
+      </div>
+
+      <!-- Generated Query Section -->
+      <div class="section" id="querySection" style="display: none;">
+        <h2>Generated SQL Query</h2>
+        <div class="query-container">
+          <pre id="generatedQuery"></pre>
+          <div class="query-actions">
+            <button onclick="copyQuery()">📋 Copy</button>
+            <button onclick="executeQuery()">▶️ Execute</button>
+            <button onclick="explainQuery()">❓ Explain</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Section -->
+      <div class="section" id="resultsSection" style="display: none;">
+        <h2>Query Results</h2>
+        <div id="resultsContainer"></div>
+      </div>
+
+      <!-- Database Management -->
+      <div class="section">
+        <h2>Database Management</h2>
+        <div class="db-actions">
+          <div class="upload-section">
+            <h3>Upload CSV Data</h3>
+            <input type="file" id="csvFile" accept=".csv" />
+            <button onclick="uploadData()">Upload</button>
+          </div>
+          <div class="schema-section">
+            <h3>Database Schema</h3>
+            <button onclick="showSchema()">View Schema</button>
+            <div id="schemaContainer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart Generation Section -->
+      <!-- Chart Generation Section -->
+<div class="section">
+  <h2>Generate Chart</h2>
+  <form id="generateChartForm">
+    <label>File Name (uploaded):</label>
+    <input type="text" name="file_name" required /><br /><br />
+
+    <label>Chart Type:</label>
+    <select name="chart_type" required>
+      <option value="bar">Bar</option>
+      <option value="pie">Pie</option>
+      <option value="line">Line</option>
+    </select><br /><br />
+
+    <label>X Column:</label>
+    <input type="text" name="x_col" required /><br /><br />
+
+    <label>Y Column:</label>
+    <input type="text" name="y_col" required /><br /><br />
+
+    <label>User ID:</label>
+    <input type="text" name="user_id" required /><br /><br />
+
+    <button type="submit">Generate Chart</button>
+  </form>
+</div>
+
+
+      <!-- Chart Display Section -->
+      <div id="chartSection" class="section" style="display: none;">
+        <h2>Generated Chart</h2>
+        <iframe id="chartFrame" width="600" height="400"></iframe>
+      </div>
+
+      <!-- Dashboard Viewing Section -->
+      <div class="section">
+        <h2>View Dashboard</h2>
+        <form id="viewDashboardForm">
+          <label>User ID:</label>
+          <input type="text" name="user_id" required />
+          <button type="submit">View Dashboard</button>
+        </form>
+        <div id="dashboardContainer"></div>
+      </div>
+
+      <!-- Status Messages -->
+      <div id="statusMessage" class="status-message"></div>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
