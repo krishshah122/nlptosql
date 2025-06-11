@@ -29,7 +29,7 @@ class DatabaseConnection(BaseModel):
     connection_string: Optional[str] = None
 
 # Free AI API configuration (using Groq - free tier)
-GROQ_API_KEY = "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"
+GROQ_API_KEY = "Your Api key"
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY environment variable not set. Get a free key from console.groq.com")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
