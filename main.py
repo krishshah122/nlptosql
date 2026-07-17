@@ -28,8 +28,30 @@ class DatabaseConnection(BaseModel):
     db_type: str
     connection_string: Optional[str] = None
 
+def load_env_file(env_path: str = ".env") -> None:
+    """Load key/value pairs from a local .env file into os.environ."""
+    if not os.path.exists(env_path):
+        return
+
+    with open(env_path, "r", encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+                value = value[1:-1]
+
+            os.environ.setdefault(key, value)
+
+
 # Free AI API configuration (using Groq - free tier)
-GROQ_API_KEY = "Your Api key"
+load_env_file()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY environment variable not set. Get a free key from console.groq.com")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -89,7 +111,7 @@ def generate_sql_query(question: str, schema: dict) -> str:
         }
         
         data = {
-            "model": "llama3-8b-8192",  # Free model
+            "model": "llama-3.1-8b-instant",
             "messages": [
                 {"role": "system", "content": "You are a SQL expert assistant."},
                 {"role": "user", "content": prompt}
@@ -107,10 +129,12 @@ def generate_sql_query(question: str, schema: dict) -> str:
             sql_query = sql_query.replace('```sql', '').replace('```', '').strip()
             return sql_query
         else:
+            print(f"API Error ({response.status_code}): {response.text}")
             # Fallback to simple pattern matching for common queries
             return generate_simple_query(question, schema)
             
     except Exception as e:
+        print(f"Exception calling Groq API: {e}")
         return generate_simple_query(question, schema)
 
 def generate_simple_query(question: str, schema: dict) -> str:
@@ -120,7 +144,9 @@ def generate_simple_query(question: str, schema: dict) -> str:
     # Get first table name as default
     table_name = list(schema.keys())[0] if schema else "your_table"
     
-    if any(word in question_lower for word in ['show', 'display', 'get', 'fetch', 'dikhao', 'batao']):
+    if any(word in question_lower for word in ['all', 'entire', 'sara', 'sab']):
+        return f"SELECT * FROM {table_name};"
+    elif any(word in question_lower for word in ['show', 'display', 'get', 'fetch', 'dikhao', 'batao']):
         return f"SELECT * FROM {table_name} LIMIT 10;"
     elif any(word in question_lower for word in ['count', 'kitne', 'how many']):
         return f"SELECT COUNT(*) FROM {table_name};"
@@ -251,7 +277,7 @@ async def explain_query(query: dict):
         }
         
         data = {
-            "model": "mixtral-8x7b-32768",
+            "model": "llama-3.1-8b-instant",
             "messages": [
                 {"role": "user", "content": prompt}
             ],
