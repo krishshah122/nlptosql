@@ -12,13 +12,14 @@ from typing import Optional, List, Dict
 from dashboard_utils import save_chart_to_dashboard, get_user_charts
 from chart_utils import generate_chart
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+DATABASE_PATH = os.path.join(BASE_DIR, "assistant.db")
+
 app = FastAPI(title="SQL Work Assistant")
 
 # Mount static files
-app.mount("/static", StaticFiles(directory="static"), name="static")
-
-# Database connection
-DATABASE_PATH = "assistant.db"
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 class QueryRequest(BaseModel):
     question: str
@@ -28,8 +29,11 @@ class DatabaseConnection(BaseModel):
     db_type: str
     connection_string: Optional[str] = None
 
-def load_env_file(env_path: str = ".env") -> None:
+def load_env_file(env_path: str | None = None) -> None:
     """Load key/value pairs from a local .env file into os.environ."""
+    if env_path is None:
+        env_path = os.path.join(BASE_DIR, ".env")
+
     if not os.path.exists(env_path):
         return
 
@@ -52,9 +56,9 @@ def load_env_file(env_path: str = ".env") -> None:
 # Free AI API configuration (using Groq - free tier)
 load_env_file()
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
-if not GROQ_API_KEY:
-    raise ValueError("GROQ_API_KEY environment variable not set. Get a free key from console.groq.com")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
+if not GROQ_API_KEY:
+    print("GROQ_API_KEY is not set. AI features will use fallback logic.")
 
 def get_database_schema():
     """Get current database schema"""
@@ -160,7 +164,8 @@ def generate_simple_query(question: str, schema: dict) -> str:
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     """Serve the main HTML page"""
-    with open("static/index.html", "r", encoding="utf-8") as f:
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    with open(index_path, "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
 
 @app.post("/generate-query")
@@ -219,7 +224,9 @@ async def execute_query(query: dict):
 async def upload_data(file: UploadFile = File(...)):
     try:
         print("Received file:", file.filename)
-        file_location = f"static/uploads/{file.filename}"
+        upload_dir = os.path.join(STATIC_DIR, "uploads")
+        os.makedirs(upload_dir, exist_ok=True)
+        file_location = os.path.join(upload_dir, file.filename)
         with open(file_location, "wb") as f:
             f.write(await file.read())
         print("Saved file to:", file_location)
@@ -314,7 +321,7 @@ async def generate_chart_endpoint(
         print("user_id:", user_id)
 
         # 🔍 Check file path existence
-        filepath = f"static/uploads/{file_name}"
+        filepath = os.path.join(STATIC_DIR, "uploads", file_name)
         print("Checking if file exists:", filepath)
         if not os.path.exists(filepath):
             raise HTTPException(status_code=404, detail="File not found. Upload it first.")
@@ -347,7 +354,8 @@ async def get_dashboard(user_id: str):
     
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
-    with open("static/index.html", "r") as f:
+    index_path = os.path.join(STATIC_DIR, "index.html")
+    with open(index_path, "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
 if __name__ == "__main__":
